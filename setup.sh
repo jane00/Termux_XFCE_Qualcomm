@@ -77,7 +77,7 @@ proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 cp /usr/share/zoneinf
 
 setup_xfce() {
 #Install xfce4 desktop and additional packages
-pkg install git neofetch mesa-zink virglrenderer-mesa-zink vulkan-loader-android glmark2 papirus-icon-theme xfce4 xfce4-goodies pavucontrol-qt exa bat jq nala wmctrl firefox netcat-openbsd -y
+pkg install git neofetch mesa-zink virglrenderer-mesa-zink vulkan-loader-android glmark2 xfce4 xfce4-goodies pavucontrol-qt exa bat jq nala wmctrl firefox netcat-openbsd -y
 
 #Create .bashrc
 cp $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/etc/skel/.bashrc $HOME/.bashrc
@@ -379,8 +379,8 @@ sed -i "s/phoenixbyrd/$username/g" .config/autostart/org.flameshot.Flameshot.des
 setup_proot
 setup_xfce
 setup_termux_x11
-setup_theme
-setup_xfce_settings
+#setup_theme
+#setup_xfce_settings
 
 rm setup.sh
 source .bashrc
