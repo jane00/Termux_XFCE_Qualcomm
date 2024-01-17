@@ -27,7 +27,7 @@ termux-change-repo
 
 pkg update -y -o Dpkg::Options::="--force-confold"
 pkg upgrade -y -o Dpkg::Options::="--force-confold"
-pkg uninstall dbus -y
+#pkg uninstall dbus -y
 pkg install wget ncurses-utils dbus proot-distro x11-repo tur-repo pulseaudio -y
 
 #Create default directories
@@ -39,7 +39,7 @@ setup_proot() {
 proot-distro install debian
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt update
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt upgrade -y
-proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt install sudo wget nala jq flameshot conky-all libvulkan1 glmark2 -y
+proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt install sudo wget libvulkan1 glmark2 xfce4 xfce4-goodies pavucontrol-qt -y
 
 #Install DRI3 patched driver
 wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
@@ -60,15 +60,6 @@ chmod u-w  $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/etc/sudoers
 #Set proot DISPLAY
 echo "export DISPLAY=:1.0" >> $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
 
-#Set proot aliases
-echo "
-alias virgl='GALLIUM_DRIVER=virpipe '
-alias ls='exa -lF --icons'
-alias cat='bat '
-alias apt='sudo nala '
-alias start='echo "please run from termux, not debian proot."'
-" >> $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
-
 #Set proot timezone
 timezone=$(getprop persist.sys.timezone)
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 rm /etc/localtime
@@ -77,127 +68,19 @@ proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 cp /usr/share/zoneinf
 
 setup_xfce() {
 #Install xfce4 desktop and additional packages
-pkg install git neofetch mesa-zink virglrenderer-mesa-zink vulkan-loader-android glmark2 xfce4 xfce4-goodies pavucontrol-qt exa bat jq nala wmctrl firefox netcat-openbsd -y
+pkg install git neofetch mesa-zink virglrenderer-mesa-zink vulkan-loader-android glmark2 xfce4 xfce4-goodies pavucontrol-qt -y
 
 #Create .bashrc
-cp $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/etc/skel/.bashrc $HOME/.bashrc
+#cp $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/etc/skel/.bashrc $HOME/.bashrc
 
 #Enable Sound
 echo "
 pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
-" > $HOME/.sound
+" > $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.sound
 
 echo "
-source .sound" >> .bashrc
-
-#Set aliases
-echo "
-alias debian='proot-distro login debian --user $username --shared-tmp'
-alias ls='exa -lF --icons'
-alias cat='bat '
-alias apt='pkg upgrade -y && nala $@'
-" >> $HOME/.bashrc
-
-wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/ascii-image-converter
-mv ascii-image-converter $HOME/../usr/bin
-chmod +x $HOME/../usr/bin/ascii-image-converter
-
-#Put Firefox icon on Desktop
-cp $HOME/../usr/share/applications/firefox.desktop $HOME/Desktop 
-chmod +x $HOME/Desktop/firefox.desktop
-
-cat <<'EOF' > ../usr/bin/prun
-#!/bin/bash
-varname=$(basename $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/*)
-proot-distro login debian --user $varname --shared-tmp -- env DISPLAY=:1.0 $@
-
-EOF
-chmod +x ../usr/bin/prun
-
-cat <<'EOF' > ../usr/bin/cp2menu
-#!/bin/bash
-
-cd
-
-user_dir="../usr/var/lib/proot-distro/installed-rootfs/debian/home/"
-
-# Get the username from the user directory
-username=$(basename "$user_dir"/*)
-
-action=$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="" --column="Action" TRUE "Copy .desktop file" FALSE "Remove .desktop file")
-
-if [[ -z $action ]]; then
-  zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
-  exit 0
-fi
-
-if [[ $action == "Copy .desktop file" ]]; then
-  selected_file=$(zenity --file-selection --title="Select .desktop File" --file-filter="*.desktop" --filename="../usr/var/lib/proot-distro/installed-rootfs/debian/usr/share/applications")
-
-  if [[ -z $selected_file ]]; then
-    zenity --info --text="No file selected. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
-
-  desktop_filename=$(basename "$selected_file")
-
-  cp "$selected_file" "../usr/share/applications/"
-  sed -i "s/^Exec=\(.*\)$/Exec=proot-distro login debian --user $username --shared-tmp -- env DISPLAY=:1.0 \1/" "../usr/share/applications/$desktop_filename"
-
-  zenity --info --text="Operation completed successfully!" --title="Success"
-elif [[ $action == "Remove .desktop file" ]]; then
-  selected_file=$(zenity --file-selection --title="Select .desktop File to Remove" --file-filter="*.desktop" --filename="../usr/share/applications")
-
-  if [[ -z $selected_file ]]; then
-    zenity --info --text="No file selected for removal. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
-
-  desktop_filename=$(basename "$selected_file")
-
-  rm "$selected_file"
-
-  zenity --info --text="File '$desktop_filename' has been removed successfully!" --title="Success"
-fi
-
-EOF
-chmod +x ../usr/bin/cp2menu
-
-echo "[Desktop Entry]
-Version=1.0
-Type=Application
-Name=cp2menu
-Comment=
-Exec=cp2menu
-Icon=edit-move
-Categories=System;
-Path=
-Terminal=false
-StartupNotify=false
-" > $HOME/Desktop/cp2menu.desktop 
-chmod +x $HOME/Desktop/cp2menu.desktop
-mv $HOME/Desktop/cp2menu.desktop $HOME/../usr/share/applications
-
-#App Installer Utility
-git clone https://github.com/bengkelgawai/App-Installer.git
-mv $HOME/App-Installer $HOME/.App-Installer
-chmod +x $HOME/.App-Installer/*
-
-echo "[Desktop Entry]
-Version=1.0
-Type=Application
-Name=App Installer
-Comment=
-Exec=/data/data/com.termux/files/home/.App-Installer/app-installer
-Icon=package-install
-Categories=System;
-Path=
-Terminal=false
-StartupNotify=false
-" > $HOME/Desktop/App-Installer.desktop
-chmod +x $HOME/Desktop/App-Installer.desktop
-cp $HOME/Desktop/App-Installer.desktop $HOME/../usr/share/applications
+source .sound" >> $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
 
 }
 
@@ -208,7 +91,7 @@ sed -i '12s/^#//' $HOME/.termux/termux.properties
 wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/termux-x11.deb
 dpkg -i termux-x11.deb
 rm termux-x11.deb
-apt-mark hold termux-x11-nightly
+#apt-mark hold termux-x11-nightly
 
 wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/termux-x11.apk
 mv termux-x11.apk $HOME/storage/downloads/
@@ -296,97 +179,13 @@ EOF
 chmod +x $HOME/../usr/bin/kill_termux_x11
 }
 
-setup_theme() {
-#Download Wallpaper
-wget https://raw.githubusercontent.com/bengkelgawai/Termux_XFCE/main/peakpx.jpg
-wget https://raw.githubusercontent.com/bengkelgawai/Termux_XFCE/main/dark_waves.png
-mv peakpx.jpg $HOME/../usr/share/backgrounds/xfce/
-mv dark_waves.png $HOME/../usr/share/backgrounds/xfce/
-
-#Install WhiteSur-Dark Theme
-wget https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/refs/tags/2023-04-26.zip
-unzip 2023-04-26.zip
-tar -xf WhiteSur-gtk-theme-2023-04-26/release/WhiteSur-Dark-44-0.tar.xz
-mv WhiteSur-Dark/ $HOME/../usr/share/themes/
-rm -rf WhiteSur*
-rm 2023-04-26.zip
-
-#Install Fluent Cursor Icon Theme
-wget https://github.com/vinceliuice/Fluent-icon-theme/archive/refs/tags/2023-02-01.zip
-unzip 2023-02-01.zip
-mv Fluent-icon-theme-2023-02-01/cursors/dist $HOME/../usr/share/icons/ 
-mv Fluent-icon-theme-2023-02-01/cursors/dist-dark $HOME/../usr/share/icons/
-cp -r $HOME/../usr/share/icons/dist-dark $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/usr/share/icons/dist-dark
-rm -rf $HOME//Fluent*
-rm 2023-02-01.zip
-
-cat <<'EOF' > $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.Xresources
-Xcursor.theme: dist-dark
-EOF
-
-#Setup Fonts
-wget https://github.com/microsoft/cascadia-code/releases/download/v2111.01/CascadiaCode-2111.01.zip
-mkdir .fonts 
-mkdir $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.fonts/
-unzip CascadiaCode-2111.01.zip
-mv otf/static/* .fonts/ && rm -rf otf
-mv ttf/* .fonts/ && rm -rf ttf/
-rm -rf woff2/ && rm -rf CascadiaCode-2111.01.zip
-
-wget https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/Meslo.zip
-unzip Meslo.zip
-mv *.ttf .fonts/
-rm Meslo.zip
-rm LICENSE.txt
-rm readme.md
-
-wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/NotoColorEmoji-Regular.ttf
-mv NotoColorEmoji-Regular.ttf .fonts
-cp .fonts/NotoColorEmoji-Regular.ttf $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.fonts/ 
-
-#Setup Fancybash Termux
-wget https://raw.githubusercontent.com/bengkelgawai/Termux_XFCE/main/fancybash.sh
-mv fancybash.sh .fancybash.sh
-echo "source $HOME/.fancybash.sh" >> $HOME/.bashrc
-sed -i "326s/\\\u/$username/" $HOME/.fancybash.sh
-sed -i "327s/\\\h/termux/" $HOME/.fancybash.sh
-
-#Setup Fancybash Proot
-cp .fancybash.sh $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username
-echo "source ~/.fancybash.sh" >> $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.bashrc
-sed -i '327s/termux/proot/' $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.fancybash.sh
-
-wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/font.ttf
-mv font.ttf .termux/font.ttf
-}
-
-setup_xfce_settings() {
-wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/conky.tar.gz
-tar -xvzf conky.tar.gz
-rm conky.tar.gz
-mkdir ../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config
-mv .config/conky/ ../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config
-mv .config/neofetch ../usr/var/lib/proot-distro/installed-rootfs/debian/home/$username/.config
-
-wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/config.tar.gz
-tar -xvzf config.tar.gz
-rm config.tar.gz
-chmod u+rwx .config/autostart/conky.desktop
-chmod u+rwx .config/autostart/org.flameshot.Flameshot.desktop
-
-sed -i "s/phoenixbyrd/$username/g" .config/autostart/org.flameshot.Flameshot.desktop
-
-}
-
 setup_proot
 setup_xfce
 setup_termux_x11
-#setup_theme
-#setup_xfce_settings
 
 rm setup.sh
-source .bashrc
-termux-reload-settings
+#source .bashrc
+#termux-reload-settings
 
 ########
 ##Finish ##
