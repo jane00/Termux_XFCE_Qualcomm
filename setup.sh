@@ -42,7 +42,7 @@ proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt upgrade -y
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 apt install sudo wget libvulkan1 glmark2 xfce4 xfce4-goodies pavucontrol-qt -y
 
 #Install DRI3 patched driver
-wget https://github.com/jane00/Termux_XFCE_Qualcomm/raw/main/mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
+#wget https://github.com/jane00/Termux_XFCE_Qualcomm/raw/main/mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
 mv mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb $HOME/../usr/var/lib/proot-distro/installed-rootfs/debian/root/
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 dpkg -i mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
 proot-distro login debian --shared-tmp -- env DISPLAY=:1.0 rm mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
@@ -88,7 +88,7 @@ setup_termux_x11() {
 # Install Termux-X11
 sed -i '12s/^#//' $HOME/.termux/termux.properties
 
-wget https://github.com/jane00/Termux_XFCE_Qualcomm/raw/main/termux-x11.deb
+#wget https://github.com/jane00/Termux_XFCE_Qualcomm/raw/main/termux-x11.deb
 dpkg -i termux-x11.deb
 rm termux-x11.deb
 #apt-mark hold termux-x11-nightly
