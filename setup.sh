@@ -22,7 +22,7 @@ echo "This script will install XFCE Desktop in Termux along with a Debian proot"
 echo ""
 read -r -p "Please enter username for proot installation: " username </dev/tty
 
-termux-setup-storage
+#termux-setup-storage
 termux-change-repo
 
 pkg update -y -o Dpkg::Options::="--force-confold"
@@ -93,9 +93,9 @@ dpkg -i termux-x11.deb
 rm termux-x11.deb
 #apt-mark hold termux-x11-nightly
 
-wget https://github.com/jane00/Termux_XFCE/raw/main/termux-x11.apk
-mv termux-x11.apk $HOME/storage/downloads/
-termux-open $HOME/storage/downloads/termux-x11.apk
+#wget https://github.com/jane00/Termux_XFCE/raw/main/termux-x11.apk
+#mv termux-x11.apk $HOME/storage/downloads/
+#termux-open $HOME/storage/downloads/termux-x11.apk
 
 #Create kill_termux_x11.desktop
 echo "[Desktop Entry]
